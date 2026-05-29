@@ -1,17 +1,16 @@
 import express from "express";
 import db from "./db/db.config.js";
 import mainRouter from "./src/api/main.route.js";
+import errorHandler from "./src/middleware/errorHandler.js";
 const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", mainRouter);
 
-// app.get("/api/chat/conversations", (req, res) => {
-//   res.send("GET METHOD");
-// });
+app.use(errorHandler);
 
-// app.post("/api/chat/conversations", (req, res) => {
-//   res.send("POST METHOD");
-// });
+
 async function startServer() {
   try {
     const connection = await db.getConnection();
