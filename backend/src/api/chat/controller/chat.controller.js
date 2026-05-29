@@ -1,10 +1,17 @@
-import { postConversationsService } from "../service/chat.service.js";
+import {
+  getRecentConversations,
+  postConversationsService,
+} from "../service/chat.service.js";
 
 export async function getConversationsController(req, res) {
   try {
     // res.send("GET METHOD");
-    const response = await getConversationsService();
-    res.send(response);
+    const response = await getRecentConversations(100);
+    res.status(200).json({
+      success: true,
+      message: "get api hitted", 
+      data: { conversations: response },
+    });
   } catch (error) {
     throw error;
   }

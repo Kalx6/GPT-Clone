@@ -10,7 +10,7 @@ const createGeminiClient = () => {
   return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 };
 
-const getRecentConversations = async (limit = 5) => {
+export const getRecentConversations = async (limit = 5) => {
   const normalizedLimit = parseInt(limit, 10);
   const safeLimit =
     Number.isNaN(normalizedLimit) || normalizedLimit <= 0
@@ -36,7 +36,7 @@ const generateAssistantResponse = async (historyRows, question) => {
     })),
   });
   const result = await chat.sendMessage({ message: question });
-  console.log(result.text);
+  // console.log(result.text);
   return {
     text: result.text,
     totalToken: result.usageMetadata.totalTokenCount,
@@ -87,11 +87,13 @@ export async function postConversationsService(question) {
       ["assistant", assistantText.text, assistantText.totalToken],
     );
 
-    const userMessage = await getMessageById(result.insertId);
-    const assistantMessage = await getMessageById(assistantResponse.insertId);
+    const userConversation = await getMessageById(result.insertId);
+    const assistantConversation = await getMessageById(assistantResponse.insertId);
 
-    return { userMessage, assistantMessage };
+    return { userConversation, assistantConversation };
   } catch (error) {
     throw error;
   }
 }
+
+

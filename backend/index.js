@@ -1,8 +1,10 @@
 import express from "express";
+import cors from "cors";
 import db from "./db/db.config.js";
 import mainRouter from "./src/api/main.route.js";
 import errorHandler from "./src/middleware/errorHandler.js";
 const app = express();
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
