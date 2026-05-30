@@ -1,12 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-import Sidebar from './components/Sidebar/Sidebar';
-import ChatHeader from './components/ChatHeader/ChatHeader';
-import MessageList from './components/MessageList/MessageList';
-import ChatInput from './components/ChatInput/ChatInput';
-import './App.css';
+import { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import Sidebar from "./components/Sidebar/Sidebar";
+import ChatHeader from "./components/ChatHeader/ChatHeader";
+import MessageList from "./components/MessageList/MessageList";
+import ChatInput from "./components/ChatInput/ChatInput";
+import "./App.css";
 
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = `${import.meta.env.VITE_BACKEND_BASE_URL}/api`;
 
 function App() {
   const [conversations, setConversations] = useState([]);
@@ -14,7 +14,7 @@ function App() {
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -32,18 +32,18 @@ function App() {
         setConversations(response.data.data.conversations);
       }
     } catch (error) {
-      console.error('Error fetching conversations:', error);
+      console.error("Error fetching conversations:", error);
     }
   };
 
-  const handleSendMessage = async question => {
+  const handleSendMessage = async (question) => {
     // Optimistically add user message
     const tempUserMessage = {
       id: Date.now(),
-      role: 'user',
+      role: "user",
       content: question,
     };
-    setConversations(prev => [...prev, tempUserMessage]);
+    setConversations((prev) => [...prev, tempUserMessage]);
     setIsLoading(true);
 
     try {
@@ -53,37 +53,37 @@ function App() {
       if (response.data.success) {
         const { userConversation, assistantConversation } = response.data.data;
         // Replace temp message with real ones
-        setConversations(prev => {
-          const filtered = prev.filter(msg => msg.id !== tempUserMessage.id);
+        setConversations((prev) => {
+          const filtered = prev.filter((msg) => msg.id !== tempUserMessage.id);
           return [...filtered, userConversation, assistantConversation];
         });
       }
     } catch (error) {
-      console.error('Error posting conversation:', error);
+      console.error("Error posting conversation:", error);
 
       // Extract error message from backend response or use a realistic fallback
       const errorMessage =
         error.response?.data?.message ||
-        'There was an error generating a response.';
+        "There was an error generating a response.";
 
       // Add error message to chat
       const errorConversation = {
         id: Date.now() + 1,
-        role: 'assistant',
+        role: "assistant",
         content: errorMessage,
       };
 
-      setConversations(prev => [...prev, errorConversation]);
+      setConversations((prev) => [...prev, errorConversation]);
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className='app'>
+    <div className="app">
       <Sidebar />
 
-      <main className='chat'>
+      <main className="chat">
         <ChatHeader />
 
         <MessageList
