@@ -10,7 +10,7 @@ const createGeminiClient = () => {
   return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 };
 
-export const getRecentConversations = async (limit = 5) => {
+export const getRecentConversations = async (userId, limit = 5) => {
   const normalizedLimit = parseInt(limit, 10);
   const safeLimit =
     Number.isNaN(normalizedLimit) || normalizedLimit <= 0
@@ -18,7 +18,8 @@ export const getRecentConversations = async (limit = 5) => {
       : normalizedLimit;
 
   const [rows] = await db.execute(
-    `SELECT id,role, content, created_at FROM conversations ORDER BY id DESC LIMIT ${safeLimit}`,
+    `SELECT id,role, content, created_at FROM conversations WHERE user_id = ? ORDER BY id DESC LIMIT ${safeLimit}`,
+    [userId],
   );
   return rows.reverse();
 };
@@ -43,10 +44,10 @@ const generateAssistantResponse = async (historyRows, question) => {
   }; //return gemini response
 };
 
-const getMessageById = async (messageId) => {
+const getMessageById = async (messageId, userId) => {
   const [rows] = await db.execute(
-    `SELECT id,role, content, token_count, created_at FROM conversations WHERE id = ?`,
-    [messageId],
+    `SELECT id,role, content, token_count, created_at FROM conversations WHERE id = ? AND user_id = ?`,
+    [messageId, userId],
   );
   if (!rows[0]) return null;
   return {
@@ -58,7 +59,7 @@ const getMessageById = async (messageId) => {
   };
 };
 
-export async function postConversationsService(question) {
+export async function postConversationsService(question, userId) {
   //validation
   try {
     if (!question || !question.trim()) {
@@ -68,12 +69,12 @@ export async function postConversationsService(question) {
     }
 
     //recent history
-    const historyRows = await getRecentConversations();
+    const historyRows = await getRecentConversations(userId);
 
     //save user message to db
     const [result] = await db.execute(
-      `INSERT INTO conversations (role, content) VALUES (?, ?)`,
-      ["user", question],
+      `INSERT INTO conversations (role, content, user_id) VALUES (?, ?, ?)`,
+      ["user", question, userId],
     );
 
     const assistantText = await generateAssistantResponse(
@@ -83,17 +84,18 @@ export async function postConversationsService(question) {
 
     //save assistant message to db
     const [assistantResponse] = await db.execute(
-      `INSERT INTO conversations (role, content, token_count) VALUES (?, ?, ?)`,
-      ["assistant", assistantText.text, assistantText.totalToken],
+      `INSERT INTO conversations (role, content, token_count, user_id) VALUES (?, ?, ?, ?)`,
+      ["assistant", assistantText.text, assistantText.totalToken, userId],
     );
 
-    const userConversation = await getMessageById(result.insertId);
-    const assistantConversation = await getMessageById(assistantResponse.insertId);
+    const userConversation = await getMessageById(result.insertId, userId);
+    const assistantConversation = await getMessageById(
+      assistantResponse.insertId,
+      userId,
+    );
 
     return { userConversation, assistantConversation };
   } catch (error) {
     throw error;
   }
 }
-
-
