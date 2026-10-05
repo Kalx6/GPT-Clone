@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import db from "../../db/db.config.js";
 
 function authError(message) {
   const error = new Error(message);
@@ -6,26 +7,38 @@ function authError(message) {
   return error;
 }
 
-export function requireAuth(req, res, next) {
+export async function requireAuth(req, res, next) {
   const [scheme, token] = (req.get("Authorization") || "").split(" ");
   if (scheme !== "Bearer" || !token) {
     return next(authError("Authentication required"));
   }
 
   if (!process.env.JWT_SECRET) {
-    return next(new Error("JWT_SECRET is not defined")); // our misconfiguration, so a 500, not a 401
+    return next(new Error("JWT_SECRET is not defined")); // our misconfiguration, so a 500
   }
 
+  let userId;
   try {
-    // Pinning the algorithm stops attackers from swapping in a weaker one
     const payload = jwt.verify(token, process.env.JWT_SECRET, {
       algorithms: ["HS256"],
     });
-    const userId = Number(payload.sub);
+    userId = Number(payload.sub);
     if (!Number.isInteger(userId)) throw new Error("bad subject");
+  } catch {
+    return next(authError("Invalid or expired token"));
+  }
+
+  try {
+    // A valid token is not enough: the account must still exist
+    const [rows] = await db.execute(
+      `SELECT user_id FROM users WHERE user_id = ?`,
+      [userId],
+    );
+    if (!rows[0]) return next(authError("Invalid or expired token"));
+
     req.user = { id: userId };
     next();
-  } catch {
-    next(authError("Invalid or expired token"));
+  } catch (error) {
+    next(error); // a database problem is a real 500, not a 401
   }
 }
