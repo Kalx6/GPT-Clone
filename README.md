@@ -6,9 +6,9 @@ A full-stack AI chatbot with user accounts. Sign up, log in, and chat with Googl
 
 ## Screenshot
 
-![Chat screen](/chat-screenshot-1.png)
+![Chat screen](/frontend/public/chat-screenshot-1.png)
 
-![Chat screen](/chat-screenshot-2.png)
+![Chat screen](/frontend/public/chat-screenshot-2.png)
 
 ## Features
 
