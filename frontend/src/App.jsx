@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { api } from "./services/api";
 import Sidebar from "./components/Sidebar/Sidebar";
 import ChatHeader from "./components/ChatHeader/ChatHeader";
@@ -10,6 +10,11 @@ function App() {
   const [conversations, setConversations] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(
+    () => window.matchMedia("(min-width: 768px)").matches,
+  );
+  const closeSidebar = useCallback(() => setIsSidebarOpen(false), []);
+  const toggleSidebar = () => setIsSidebarOpen((open) => !open);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -79,10 +84,17 @@ function App() {
 
   return (
     <div className="app">
-      <Sidebar />
+      <Sidebar
+        isOpen={isSidebarOpen}
+        onClose={closeSidebar}
+        onToggle={toggleSidebar}
+      />
 
       <main className="chat">
-        <ChatHeader />
+        <ChatHeader
+          isSidebarOpen={isSidebarOpen}
+          onOpenSidebar={() => setIsSidebarOpen(true)}
+        />
 
         <MessageList
           conversations={conversations}

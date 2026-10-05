@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap");
 
 :root {
   --bg-sidebar: #171717;
@@ -18,10 +18,11 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: "Inter", sans-serif;
   background-color: var(--bg-main);
   color: var(--text-primary);
   height: 100vh;
+  height: 100dvh; /* the real visible height on phones; browsers without dvh use the line above */
   overflow: hidden;
 }
 
@@ -29,12 +30,14 @@ body {
 .app {
   display: flex;
   height: 100vh;
+  height: 100dvh;
   width: 100vw;
 }
 
 /* Main Chat Area */
 .chat {
   flex: 1;
+  min-width: 0; /* lets the chat shrink, so wide code blocks scroll instead of stretching the page */
   display: flex;
   flex-direction: column;
   position: relative;
